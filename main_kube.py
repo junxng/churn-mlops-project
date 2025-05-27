@@ -1,6 +1,6 @@
 import os
-from src.Sentiment_Analysis.utils.logging import logger
-from src.Sentiment_Analysis.pipeline.kubeflow import pipeline
+from src.Churn.utils.logging import logger
+from src.Churn.pipeline.kubeflow import pipeline
 from kfp import Client
 from kfp.compiler import Compiler
 Compiler().compile(

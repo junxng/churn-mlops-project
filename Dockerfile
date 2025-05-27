@@ -9,7 +9,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Install additional dependencies
-RUN pip install dvc dvc[s3] boto3 mlflow dagshub tensorflow fastapi uvicorn chardet openpyxl xlrd
+RUN pip install dvc dvc[s3] boto3 mlflow dagshub fastapi uvicorn chardet openpyxl xlrd
 
 # Copy the entire project
 COPY . .
