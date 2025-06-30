@@ -3,6 +3,7 @@ import pandas as pd
 import pandas as pd
 import json
 from src.Churn.entity.config_entity import DataIngestionConfig
+from src.Churn.config.configuration import ConfigurationManager
 from pathlib import Path
 
 def most_common(lst):
@@ -18,7 +19,10 @@ def df_to_records(df):
 
 
 async def import_data(uploaded_file):
-    config = DataIngestionConfig()
+    # Create configuration manager and get data ingestion config
+    config_manager = ConfigurationManager()
+    config = config_manager.get_data_ingestion_config()
+        
     path_save = Path(config.local_data_file)  
     df = None
 

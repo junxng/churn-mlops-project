@@ -15,7 +15,8 @@ class ChurnResponse(BaseModel):
 @router.post("/", response_model=ChurnResponse)
 async def predict_churn(
     file: UploadFile = File(...),
-    model_uri: Optional[str] = Form(default="models:/RandomForestClassifier/1"),
-    scaler_uri: Optional[str] = Form(default="runs:/f3ab09385e414fd2abf29d80f74cd67a/scaler_churn_version_20250625T154746.pkl")
+    model_version: Optional[str] = Form(default="1"),
+    scaler_version: Optional[str] = Form(default="scaler_churn_version_20250625T154746.pkl"),
+    run_id: Optional[str] = Form(default="f3ab09385e414fd2abf29d80f74cd67a"),
 ):
-    return await ChurnController.predict_churn(file=file, model_uri=model_uri, scaler_uri=scaler_uri)
+    return await ChurnController.predict_churn(file=file, model_version=model_version, scaler_version=scaler_version, run_id=run_id)
