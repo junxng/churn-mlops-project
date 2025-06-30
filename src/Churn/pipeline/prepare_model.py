@@ -1,38 +1,39 @@
 from src.Churn.config.configuration import ConfigurationManager
 from src.Churn.components.base_model import PrepareBaseModel
 from src.Churn.utils.logging import logger
-
+import mlflow
+import dagshub
 STAGE_NAME = "Prepare base model"
 
 
 class ModelPreparationPipeline:
-    def __init__(self):
-        pass
-    def main(self, train_path, test_path, y_train_path, y_test_path):
+    def __init__(self, mlflow_config):
+        self.mlflow_config = mlflow_config
+    def main(self, X_train, X_test):
+        logger.info(f">>> Stage {STAGE_NAME} started <<<")
         prepare_base_model_config = ConfigurationManager().get_prepare_base_model_config()
-        prepare_base_model = PrepareBaseModel(config=prepare_base_model_config)
-        
-        model, scaler, X_train, X_test, y_train, y_test, base_model_path, scaled_train_path, scaled_test_path, scaler_path = prepare_base_model.full_model(
-            train_path=train_path,
-            test_path=test_path,
-            y_train_path=y_train_path,
-            y_test_path=y_test_path
+        dagshub.init(
+            repo_owner=self.mlflow_config.dagshub_username,
+            repo_name=self.mlflow_config.dagshub_repo_name,
+            mlflow=True
         )
+        mlflow.set_tracking_uri(self.mlflow_config.tracking_uri)
+        mlflow.set_experiment(self.mlflow_config.experiment_name)
+        with mlflow.start_run(run_name="MODEL_PREPARATION"):
+            mlflow.log_params({
+                "n_estimators": prepare_base_model_config.n_estimators,
+                "random_state": prepare_base_model_config.random_state,
+                "criterion": prepare_base_model_config.criterion,
+                "max_depth": prepare_base_model_config.max_depth,
+                "max_features": prepare_base_model_config.max_features,
+                "min_samples_leaf": prepare_base_model_config.min_samples_leaf
+            })
+            prepare_base_model = PrepareBaseModel(config=prepare_base_model_config)
+            model, base_model_path,scaler_path, X_train_scaled, X_test_scaled = prepare_base_model.full_model(
+                X_train=X_train,
+                X_test=X_test,
+            )
+        
+        logger.info(f">>> Stage {STAGE_NAME} completed <<<")
+        return model, base_model_path,scaler_path, X_train_scaled, X_test_scaled
 
-        return base_model_path, scaled_train_path, scaled_test_path, scaler_path
-
-
-
-if __name__ == "__main__":
-    try:
-        logger.info(f">>>>>> stage {STAGE_NAME} started <<<<<<")
-        pipeline = ModelPreparationPipeline()
-        base_model_path, scaled_train_path, scaled_test_path, scaler_path = pipeline.main()
-        logger.info("Model preparation completed successfully")
-        logger.info(f"Base model saved at: {base_model_path}")
-        logger.info(f"Scaler saved at: {scaler_path}")
-        logger.info(f"Scaled train data: {scaled_train_path}")
-        logger.info(f"Scaled test data: {scaled_test_path}")
-    except Exception as e:
-        logger.exception(f"Error in Model Preparation Pipeline: {e}")
-        raise e

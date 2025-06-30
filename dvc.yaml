@@ -1,53 +1,26 @@
 stages:
-  data_ingestion:
-    cmd: python -m src.Sentiment_Analysis.pipeline.prepare_data
+  training_pipeline:
+    cmd: python main.py
     deps:
-      - src/Sentiment_Analysis/pipeline/prepare_data.py
-      - src/Sentiment_Analysis/components/data_ingestion.py
+      - main.py
+      - src/Churn/pipeline/main_pipeline.py
+      - src/Churn/pipeline/prepare_data.py
+      - src/Churn/pipeline/prepare_model.py
+      - src/Churn/pipeline/train_evaluation.py
+      - src/Churn/pipeline/cleanup.py
+      - src/Churn/components/
       - config/config.yaml
+      - artifacts/data_ingestion/input_raw.csv
     outs:
-      - artifacts/data_ingestion/train_data.csv
-      - artifacts/data_ingestion/test_data.csv
-
-  prepare_base_model:
-    cmd: python -m src.Sentiment_Analysis.pipeline.prepare_model
+      - artifacts/data_version/
+      - artifacts/model_version/
+      - artifacts/evaluation/
+  cloud_storage_push:
+    cmd: python -m src.Churn.pipeline.cloud_storage_push
     deps:
-      - src/Sentiment_Analysis/pipeline/prepare_model.py
-      - src/Sentiment_Analysis/components/base_model.py
+      - src/Churn/pipeline/cloud_storage_push.py
+      - src/Churn/components/cloud_storage_push.py
+      - src/Churn/utils/cloud_storage.py
       - config/config.yaml
-      - artifacts/data_ingestion/train_data.csv
-    outs:
-      - artifacts/prepare_base_model/base_model.h5
-      - artifacts/prepare_base_model/base_model_updated.h5
-      - artifacts/prepare_base_model/tokenizer.pkl
-
-  training:
-    cmd: python -m src.Sentiment_Analysis.pipeline.training_pipeline
-    deps:
-      - src/Sentiment_Analysis/pipeline/training_pipeline.py
-      - src/Sentiment_Analysis/components/model_training.py
-      - config/config.yaml
-      - artifacts/prepare_base_model/base_model_updated.h5
-      - artifacts/prepare_base_model/tokenizer.pkl
-      - artifacts/data_ingestion/train_data.csv
-      - artifacts/data_ingestion/test_data.csv
-    outs:
-      - artifacts/training/model.h5
-      - artifacts/training/plots/training_history.png
-
-  evaluation:
-    cmd: python -m src.Sentiment_Analysis.pipeline.evaluation_plots
-    deps:
-      - src/Sentiment_Analysis/pipeline/evaluation_plots.py
-      - src/Sentiment_Analysis/components/evaluation_mlflows.py
-      - config/config.yaml
-      - artifacts/training/model.h5
-      - artifacts/data_ingestion/train_data.csv
-      - artifacts/data_ingestion/test_data.csv
-    metrics:
-      - artifacts/evaluation/metrics.json:
-          cache: false
-    plots:
-      - artifacts/evaluation/plots/confusion_matrix.png
-      - artifacts/evaluation/plots/roc_curve.png
-
+      - artifacts/data_version/
+      - artifacts/evaluation/

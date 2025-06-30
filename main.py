@@ -1,32 +1,39 @@
-import os
-import multiprocessing
-from src.Churn.utils.logging import logger
-from src.Churn.pipeline.prepare_data import DataPreparationPipeline
-from src.Churn.pipeline.main_pipeline import WorkflowRunner
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+import uvicorn
+import mlflow
+from dotenv import load_dotenv
+from controller.prediction import router as prediction_router
+from controller.retraining import router as retraining_router
 
-def main():
-    """Main execution function with proper multiprocessing protection."""
+# Load environment variables
+load_dotenv()
 
-        
-        
-    STAGE_NAME = "Full Workflow Run"
+mlflow.set_tracking_uri("https://dagshub.com/Teungtran/churn_mlops.mlflow")
 
-    try:
-       logger.info(f">>>>>> stage {STAGE_NAME} started <<<<<<")
-       
-       runner = WorkflowRunner()
-       metrics = runner.run()  
-        
-       logger.info(f"Final metrics: {metrics}")
-       logger.info(f">>>>>> stage {STAGE_NAME} completed <<<<<<\n\nx==========x")
+# Create FastAPI app
+app = FastAPI(
+    title="Churn Prediction API",
+    description="API for customer churn prediction and model retraining",
+    version="1.0.0"
+)
 
-    except Exception as e:
-       logger.exception(e)
-       raise e
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-if __name__ == '__main__':
-    # Multiprocessing protection for Windows
-    multiprocessing.freeze_support()
-    
-    # Run the main function
-    main()
+# Include routers
+app.include_router(prediction_router)
+app.include_router(retraining_router)
+
+@app.get("/")
+async def root():
+    return {"message": "Welcome to the Churn Prediction API. Use /docs to view the API documentation."}
+
+if __name__ == "__main__":
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

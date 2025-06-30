@@ -1,15 +1,28 @@
-artifacts_root: artifacts
+# Churn MLOps Configuration
+# 
+# Cloud storage functionality is REQUIRED:
+# 1. Create an AWS S3 bucket in your AWS account
+# 2. Set up AWS credentials in your environment (.env file)
+#    - AWS_ACCESS_KEY_ID
+#    - AWS_SECRET_ACCESS_KEY
+#    - AWS_REGION
+# 3. Update the bucket_name below with your actual bucket name
+# 4. Ensure the user has 's3:PutObject' permission on the bucket
+# 
+# Cloud storage will upload ONLY data_version and evaluation artifacts.
+# Model files and training artifacts remain local for security and storage efficiency.
+# If cloud storage push fails, the entire workflow will fail.
 
+artifacts_root: artifacts
 data_ingestion:
   root_dir: artifacts/data_ingestion
   data_version_dir: artifacts/data_version
   local_data_file: artifacts/data_ingestion/input_raw.csv
   test_size: 0.2
   random_state: 42
-  bucket_name: churn_data_version
+  bucket_name: churndataversion
 
 prepare_base_model:
-  root_dir: artifacts/prepare_base_model
   model_version_dir: artifacts/model_version
   data_version_dir: artifacts/data_version
   criterion: entropy
@@ -20,13 +33,22 @@ prepare_base_model:
   random_state: 42
 
 training:
-  root_dir: artifacts/training
   model_version_dir: artifacts/model_version
   data_version_dir: artifacts/data_version
-  bucket_name: churn_data_version
 
 evaluation:
-  root_dir: artifacts/evaluation
   model_version_dir: artifacts/model_version
   data_version_dir: artifacts/data_version
-  plots_dir: artifacts/evaluation/plots
+  evaluation_dir: artifacts/evaluation
+
+cloud_storage_push:
+  root_dir: artifacts
+  bucket_name: churndataversion
+  data_version_dir: artifacts/data_version  
+  evaluation_dir: artifacts/evaluation 
+
+mlflow_config:
+  dagshub_username: Teungtran
+  dagshub_repo_name: churn_mlops
+  tracking_uri: https://dagshub.com/Teungtran/churn_mlops.mlflow
+  experiment_name: Churn_model_cycle
