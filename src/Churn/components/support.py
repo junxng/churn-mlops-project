@@ -2,9 +2,9 @@ from collections import Counter
 import pandas as pd
 import pandas as pd
 import json
-from src.Churn.entity.config_entity import DataIngestionConfig
 from src.Churn.config.configuration import ConfigurationManager
 from pathlib import Path
+from src.Churn.utils.logging import logger
 
 def most_common(lst):
     counts = Counter(lst)

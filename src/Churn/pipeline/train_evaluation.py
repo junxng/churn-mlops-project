@@ -35,7 +35,6 @@ class TrainEvaluationPipeline:
                 y_train=y_train,
                 y_test=y_test
         )
-        
         logger.info(f">>> Stage {STAGE_NAME} completed <<<")
         return model, metrics, final_model_path
 
