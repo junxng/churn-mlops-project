@@ -18,7 +18,6 @@ async def predict_churn(
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     model_version: str = Form(default="1"),
-    model_name: str = Form(default="RandomForestClassifier_6b93d972"),  
     scaler_version: str = Form(default="scaler_churn_version_20250701T105905.pkl"),
     run_id: str = Form(default="b523ba441ea0465085716dcebb916294"),
 ):

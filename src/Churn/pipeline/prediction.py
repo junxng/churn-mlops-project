@@ -152,13 +152,12 @@ def run_prediction_task(
     model_version: str,
     scaler_version: str,
     run_id: str,
-    model_name: str  
 ):
     """
     Background task to run prediction pipeline
     """
     try:
-        model_uri = f"models:/{model_name}/{model_version}"  
+        model_uri = f"models:/RandomForestClassifier/{model_version}"  
         scaler_uri = f"runs:/{run_id}/{scaler_version}"
         pipeline = PredictionPipeline(model_uri, scaler_uri)
         message = pipeline.predict()
@@ -183,7 +182,6 @@ class ChurnController:
         background_tasks: BackgroundTasks,
         file: UploadFile,
         model_version: str = Form(default="1"),
-        model_name: str = Form(default="RandomForestClassifier_6b93d972"),  
         scaler_version: str = Form(default="scaler_churn_version_20250701T105905.pkl"),
         run_id: str = Form(default="b523ba441ea0465085716dcebb916294"),
     ):
@@ -205,8 +203,7 @@ class ChurnController:
                 file_path=input_file_path,
                 model_version=model_version,
                 scaler_version=scaler_version,
-                run_id=run_id,
-                model_name=model_name  
+                run_id=run_id
             )
             
             message = "Prediction task started in background. Results will be saved to experiment 'Churn_model_prediction_cycle' in https://dagshub.com/Teungtran/churn_mlops.mlflow "

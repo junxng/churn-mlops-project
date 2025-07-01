@@ -28,17 +28,12 @@ class TrainAndEvaluateModel:
         self.datetime_suffix = datetime.now().strftime('%Y%m%dT%H%M%S')
         self.model_name = f"model_churn_{self.datetime_suffix}"
         self.fine_tuned_model_name = f"finetuned_churn_{self.datetime_suffix}"
-    def log_model_to_mlflow(self, model, model_name: str):
+    def log_model_to_mlflow(self, model_name: str):
         logger.info(f"Logging model to MLflow as {model_name}")
         try:
-            # Log the model to the current run
-            mlflow.sklearn.log_model(model, model_name)
             run_id = mlflow.active_run().info.run_id
             artifact_uri = f"runs:/{run_id}/{model_name}"
-            
-            model_id = uuid.uuid4().hex[:8]
-            registered_model_name = f"RandomForestClassifier_{model_id}"
-            
+            registered_model_name = "RandomForestClassifier"
             mlflow.register_model(model_uri=artifact_uri, name=registered_model_name)
 
             logger.info(f"Successfully registered model under unique name: {registered_model_name}")
@@ -269,13 +264,13 @@ class TrainAndEvaluateModel:
                 accuracy = fine_tuned_model.score(X_test_scaled, y_test)
                 logger.info(f"Model accuracy on test data after fine-tuned: {accuracy}")
                 mlflow.log_metric("accuracy after fine-tuning", accuracy)
-                self.log_model_to_mlflow(fine_tuned_model, str(self.fine_tuned_model_name))
+                self.log_model_to_mlflow(str(self.fine_tuned_model_name))
                 mlflow.log_artifact(str(trained_model_path),"Model before tunning")    
                 return fine_tuned_model, metrics, fine_tuned_model_path
             
             else:
                 logger.info("Model accuracy is 85% or above, not needed finetuned, log trained model to mlflow")
-                self.log_model_to_mlflow(model, str(self.model_name))
+                self.log_model_to_mlflow(str(self.model_name))
                 metrics, y_pred, y_pred_prob = self.perform_detailed_evaluation(model, X_test_scaled, y_test)
                 
                 self.plot_confusion_matrix(y_test, y_pred)
