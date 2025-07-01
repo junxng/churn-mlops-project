@@ -1,8 +1,8 @@
 stages:
   training_pipeline:
-    cmd: python main.py
+    cmd: python run_pipeline.py
     deps:
-      - main.py
+      - run_pipeline.py
       - src/Churn/pipeline/main_pipeline.py
       - src/Churn/pipeline/prepare_data.py
       - src/Churn/pipeline/prepare_model.py

@@ -15,6 +15,7 @@ from sklearn.metrics import (
 from pathlib import Path
 import mlflow
 from mlflow import register_model
+import uuid
 
 from src.Churn.utils.logging import logger
 from src.Churn.entity.config_entity import TrainingConfig, EvaluationConfig
@@ -30,13 +31,17 @@ class TrainAndEvaluateModel:
     def log_model_to_mlflow(self, model, model_name: str):
         logger.info(f"Logging model to MLflow as {model_name}")
         try:
+            # Log the model to the current run
             mlflow.sklearn.log_model(model, model_name)
             run_id = mlflow.active_run().info.run_id
             artifact_uri = f"runs:/{run_id}/{model_name}"
+            
+            model_id = uuid.uuid4().hex[:8]
+            registered_model_name = f"RandomForestClassifier_{model_id}"
+            
+            mlflow.register_model(model_uri=artifact_uri, name=registered_model_name)
 
-            mlflow.register_model(model_uri=artifact_uri, name="RandomForestClassifier")
-
-            logger.info(f"Successfully registered model under name: {model_name}")
+            logger.info(f"Successfully registered model under unique name: {registered_model_name}")
         except Exception as e:
             logger.warning(f"Failed to log or register model to MLflow: {e}")
             logger.warning("Continuing without MLflow model registration")

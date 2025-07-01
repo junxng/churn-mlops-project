@@ -18,21 +18,6 @@ import dagshub
 import tempfile
 import os
 
-
-version_model_path = f"models:/RandomForestClassifier/1"
-scaler_uri_path = f"runs:/f3ab09385e414fd2abf29d80f74cd67a/scaler_churn_version_20250625T154746.pkl"
-
-try:
-    loaded_model = mlflow.pyfunc.load_model(version_model_path)
-    local_path = mlflow.artifacts.download_artifacts(artifact_uri=scaler_uri_path)
-    loaded_scaler = joblib.load(local_path)
-except Exception as e:
-    print(f"Error loading model or scaler: {e}")
-    loaded_model = None
-    scaler_churn = None
-
-
-
 class PredictionPipeline:
     def __init__(self, model_uri: str, scaler_uri: str):
         mlflow.set_tracking_uri("https://dagshub.com/Teungtran/churn_mlops.mlflow")
@@ -167,24 +152,24 @@ def run_prediction_task(
     model_version: str,
     scaler_version: str,
     run_id: str,
+    model_name: str  
 ):
     """
     Background task to run prediction pipeline
     """
     try:
-        model_uri = f"models:/RandomForestClassifier/{model_version}"
+        model_uri = f"models:/{model_name}/{model_version}"  
         scaler_uri = f"runs:/{run_id}/{scaler_version}"
         pipeline = PredictionPipeline(model_uri, scaler_uri)
         message = pipeline.predict()
 
-        
         if os.path.exists(file_path):
             try:
                 os.remove(file_path)
                 logger.info(f"Cleanup: Deleted input file {file_path}")
             except Exception as e:
                 logger.warning(f"Failed to delete input file during cleanup: {e}")
-                
+
         return message
 
     except Exception as e:
@@ -198,8 +183,9 @@ class ChurnController:
         background_tasks: BackgroundTasks,
         file: UploadFile,
         model_version: str = Form(default="1"),
-        scaler_version: str = Form(default="scaler_churn_version_20250625T154746.pkl"),
-        run_id: str = Form(default="f3ab09385e414fd2abf29d80f74cd67a"),
+        model_name: str = Form(default="RandomForestClassifier_6b93d972"),  
+        scaler_version: str = Form(default="scaler_churn_version_20250701T105905.pkl"),
+        run_id: str = Form(default="b523ba441ea0465085716dcebb916294"),
     ):
         """
         Predict churn using uploaded file and dynamic model/scaler versions.
@@ -219,7 +205,8 @@ class ChurnController:
                 file_path=input_file_path,
                 model_version=model_version,
                 scaler_version=scaler_version,
-                run_id=run_id
+                run_id=run_id,
+                model_name=model_name  
             )
             
             message = "Prediction task started in background. Results will be saved to experiment 'Churn_model_prediction_cycle' in https://dagshub.com/Teungtran/churn_mlops.mlflow "

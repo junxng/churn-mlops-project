@@ -10,7 +10,6 @@ router = APIRouter(
 )
 
 
-
 class ChurnResponse(BaseModel):
     message: str
 
@@ -18,8 +17,9 @@ class ChurnResponse(BaseModel):
 async def predict_churn(
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
-    model_version: Optional[str] = Form(default="1"),
-    scaler_version: Optional[str] = Form(default="scaler_churn_version_20250625T154746.pkl"),
-    run_id: Optional[str] = Form(default="f3ab09385e414fd2abf29d80f74cd67a"),
+    model_version: str = Form(default="1"),
+    model_name: str = Form(default="RandomForestClassifier_6b93d972"),  
+    scaler_version: str = Form(default="scaler_churn_version_20250701T105905.pkl"),
+    run_id: str = Form(default="b523ba441ea0465085716dcebb916294"),
 ):
-    return await ChurnController.predict_churn(background_tasks=background_tasks, file=file, model_version=model_version, scaler_version=scaler_version, run_id=run_id)
+    return await ChurnController.predict_churn(background_tasks=background_tasks, file=file, model_version=model_version, scaler_version=scaler_version, run_id=run_id,model_name=model_name)

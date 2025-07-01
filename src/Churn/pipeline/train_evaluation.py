@@ -15,25 +15,18 @@ class TrainEvaluationPipeline:
         training_config = ConfigurationManager().get_training_config()
         evaluation_config = ConfigurationManager().get_evaluation_config()
         
-        dagshub.init(
-            repo_owner=self.mlflow_config.dagshub_username,
-            repo_name=self.mlflow_config.dagshub_repo_name,
-            mlflow=True
+        # No need to start a new MLflow run here as we'll use the one from main_pipeline
+        model_processor = TrainAndEvaluateModel(
+            config_train=training_config,
+            config_eval=evaluation_config
         )
-        mlflow.set_tracking_uri(self.mlflow_config.tracking_uri)
-        mlflow.set_experiment(self.mlflow_config.experiment_name)   
-        with mlflow.start_run(run_name="TRAIN_AND_EVALUATE"):
-            model_processor = TrainAndEvaluateModel(
-                config_train=training_config,
-                config_eval=evaluation_config
-            )
-            
-            model, metrics, final_model_path = model_processor.train_and_evaluate(
-                base_model=base_model,
-                X_train_scaled=X_train_scaled,
-                X_test_scaled=X_test_scaled,
-                y_train=y_train,
-                y_test=y_test
+        
+        model, metrics, final_model_path = model_processor.train_and_evaluate(
+            base_model=base_model,
+            X_train_scaled=X_train_scaled,
+            X_test_scaled=X_test_scaled,
+            y_train=y_train,
+            y_test=y_test
         )
         logger.info(f">>> Stage {STAGE_NAME} completed <<<")
         return model, metrics, final_model_path

@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field
 from langchain_core.utils import from_env
 from dotenv import load_dotenv
 from datetime import datetime
+import uuid
 
 from src.Churn.entity.config_entity import (
     DataIngestionConfig,
@@ -37,24 +38,15 @@ class ConfigurationManager:
         self.config = read_yaml(config_filepath)
         create_directories([self.config.artifacts_root])
         
-    def get_mlflow_config(self, model_version: str | None = None) -> MLFlowConfig:
+    def get_mlflow_config(self) -> MLFlowConfig:
         config = self.config.mlflow_config
         base_experiment_name = config.experiment_name
-
-        if model_version is not None:
-            version = model_version
-            logger.info(f"Using user-provided version: {version}")
-            experiment_name_with_version = f"{base_experiment_name}_v{version}"
-        else:
-            timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-            experiment_name_with_version = f"{base_experiment_name}_version_{timestamp}"
-            logger.info(f"No version input, using timestamp: {experiment_name_with_version}")
 
         mlflow_config = MLFlowConfig(
             dagshub_username=config.dagshub_username,
             dagshub_repo_name=config.dagshub_repo_name,
             tracking_uri=config.tracking_uri,
-            experiment_name=experiment_name_with_version
+            experiment_name=base_experiment_name
         )
 
         logger.info(f"MLFlow configuration: {mlflow_config}")

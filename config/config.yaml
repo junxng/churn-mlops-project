@@ -51,4 +51,4 @@ mlflow_config:
   dagshub_username: Teungtran
   dagshub_repo_name: churn_mlops
   tracking_uri: https://dagshub.com/Teungtran/churn_mlops.mlflow
-  experiment_name: Churn_model_cycle
+  experiment_name: Churn_model_training_cycle

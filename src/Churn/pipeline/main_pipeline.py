@@ -8,6 +8,9 @@ from .cleanup import cleanup_temp_files
 from src.Churn.components.support import import_data
 from pathlib import Path
 from fastapi import UploadFile
+import mlflow
+import dagshub
+from datetime import datetime
 
 class WorkflowRunner:
     def __init__(self):
@@ -37,6 +40,13 @@ class WorkflowRunner:
         try:
             mlflow_config = self.config_manager.get_mlflow_config()
             logger.info(f"MLflow configured with experiment: {mlflow_config.experiment_name}")
+            dagshub.init(
+                repo_owner=mlflow_config.dagshub_username,
+                repo_name=mlflow_config.dagshub_repo_name,
+                mlflow=True
+            )
+            mlflow.set_tracking_uri(mlflow_config.tracking_uri)
+            mlflow.set_experiment(mlflow_config.experiment_name)
         except Exception as e:
             logger.warning(f"MLflow configuration failed: {e}. Continuing without MLflow tracking.")
             mlflow_config = None
@@ -66,38 +76,43 @@ class WorkflowRunner:
         
         logger.info("Data preparation completed successfully")
 
-        # Stage 2: Model Preparation
-        logger.info("=" * 50)
-        logger.info("STAGE 2: Model Preparation")
-        logger.info("=" * 50)
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        run_name = f"Churn_model_training_cycle_{timestamp}"
         
-        model_prep = ModelPreparationPipeline(mlflow_config=mlflow_config)
-        model, base_model_path, scaler_path, X_train_scaled, X_test_scaled = model_prep.main(
-            X_train=X_train,
-            X_test=X_test
-        )
-        
-        logger.info("Model preparation completed successfully")
-        logger.info(f"Base model: {base_model_path}")
-        logger.info(f"Scaler: {scaler_path}")
+        with mlflow.start_run(run_name=run_name):
+            logger.info("=" * 50)
+            logger.info("STAGE 2: Model Preparation")
+            logger.info("=" * 50)
+            
+            # Pass mlflow_config even though we're using hardcoded experiment name
+            mlflow_config = self.config_manager.get_mlflow_config()
+            model_prep = ModelPreparationPipeline(mlflow_config=mlflow_config)
+            model, base_model_path, scaler_path, X_train_scaled, X_test_scaled = model_prep.main(
+                X_train=X_train,
+                X_test=X_test
+            )
+            
+            logger.info("Model preparation completed successfully")
+            logger.info(f"Base model: {base_model_path}")
+            logger.info(f"Scaler: {scaler_path}")
 
-        logger.info("=" * 50)
-        logger.info("STAGE 3: Train and Evaluate")
-        logger.info("=" * 50)
+            logger.info("=" * 50)
+            logger.info("STAGE 3: Train and Evaluate")
+            logger.info("=" * 50)
+            
+            train_eval = TrainEvaluationPipeline(mlflow_config=mlflow_config)
+            model, metrics, final_model_path = train_eval.main(
+                base_model=model,
+                X_train_scaled=X_train_scaled,
+                X_test_scaled=X_test_scaled,
+                y_train=y_train,
+                y_test=y_test
+            )
+            
+            logger.info("Training and evaluation completed successfully")
+            logger.info(f"Metrics: {metrics}")
         
-        train_eval = TrainEvaluationPipeline(mlflow_config=mlflow_config)
-        model, metrics, final_model_path = train_eval.main(
-            base_model=model,
-            X_train_scaled=X_train_scaled,
-            X_test_scaled=X_test_scaled,
-            y_train=y_train,
-            y_test=y_test
-        )
-        
-        logger.info("Training and evaluation completed successfully")
-        logger.info(f"Metrics: {metrics}")
-        
-        # Stage 4: Cloud Storage Push
+        # Stage 4: Cloud Storage Push (outside the MLflow run)
         logger.info("=" * 50)
         logger.info("STAGE 4: Cloud Storage Push")
         logger.info("=" * 50)
