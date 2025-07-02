@@ -15,7 +15,6 @@ from sklearn.metrics import (
 from pathlib import Path
 import mlflow
 from mlflow import register_model
-import uuid
 
 from src.Churn.utils.logging import logger
 from src.Churn.entity.config_entity import TrainingConfig, EvaluationConfig
@@ -267,7 +266,6 @@ class TrainAndEvaluateModel:
                 self.log_model_to_mlflow(str(self.fine_tuned_model_name))
                 mlflow.log_artifact(str(trained_model_path),"Model before tunning")    
                 return fine_tuned_model, metrics, fine_tuned_model_path
-            
             else:
                 logger.info("Model accuracy is 85% or above, not needed finetuned, log trained model to mlflow")
                 self.log_model_to_mlflow(str(self.model_name))
