@@ -34,9 +34,7 @@ async def send_webhook_payload(
         await post_to_webhook(web_hook_url, payload)
 
     except Exception as e:
-        logger.error(
-            "Webhook notification failed with unexpected error", error=str(e)
-        )
+        logger.error(f"Webhook notification failed with unexpected error: {str(e)}")
 class PredictionPipeline:
     def __init__(self, model_uri: str, scaler_uri: str):
         mlflow.set_tracking_uri("https://dagshub.com/Teungtran/churn_mlops.mlflow")
@@ -183,7 +181,7 @@ async def run_prediction_task(
     Background task to run prediction pipeline
     """
     try:
-        model_uri = f"models:/{model_name}/{model_version}"  
+        model_uri = f"models:/{model_name}/{model_version}"
         scaler_uri = f"runs:/{run_id}/{scaler_version}"
         pipeline = PredictionPipeline(model_uri, scaler_uri)
         message = await pipeline.predict()
