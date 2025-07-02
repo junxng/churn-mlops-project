@@ -65,8 +65,7 @@ class ConfigurationManager:
             local_data_file=Path(config.local_data_file),
             test_size=config.test_size,
             random_state=config.random_state,
-            data_version_dir=Path(config.data_version_dir),
-            bucket_name=config.bucket_name
+            data_version_dir=Path(config.data_version_dir)            
             )
 
         logger.info(f"Data Ingestion config: {config}")
