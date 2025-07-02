@@ -9,7 +9,6 @@ class DataIngestionConfig:
     local_data_file: Path
     test_size: float
     random_state: int
-    bucket_name: str
 
 
 
