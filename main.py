@@ -9,7 +9,7 @@ from controller.retraining import router as retraining_router
 # Load environment variables
 load_dotenv()
 
-mlflow.set_tracking_uri("https://dagshub.com/Teungtran/churn_mlops.mlflow")
+mlflow.set_tracking_uri("https://dagshub.com/junxng/churn-mlops-project.mlflow")
 
 # Create FastAPI app
 app = FastAPI(

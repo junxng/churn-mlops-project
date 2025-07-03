@@ -37,7 +37,7 @@ async def send_webhook_payload(
         logger.error(f"Webhook notification failed with unexpected error: {str(e)}")
 class PredictionPipeline:
     def __init__(self, model_uri: str, scaler_uri: str):
-        mlflow.set_tracking_uri("https://dagshub.com/Teungtran/churn_mlops.mlflow")
+        mlflow.set_tracking_uri("https://dagshub.com/junxng/churn-mlops-project.mlflow")
 
         try:
             self.model = mlflow.pyfunc.load_model(model_uri)
@@ -89,11 +89,11 @@ class PredictionPipeline:
             config_manager = ConfigurationManager()
             data_ingestion_config = config_manager.get_data_ingestion_config()
             dagshub.init(
-            repo_owner="Teungtran",
-            repo_name="churn_mlops",
+            repo_owner="junxng",
+            repo_name="churn-mlops-project",
             mlflow=True
         )
-            mlflow.set_tracking_uri("https://dagshub.com/Teungtran/churn_mlops.mlflow")
+            mlflow.set_tracking_uri("https://dagshub.com/junxng/churn-mlops-project.mlflow")
             mlflow.set_experiment("Churn_model_prediction_cycle")  
             with mlflow.start_run(run_name=f"prediction_run_{time_str}"):
                 data_ingestion = DataIngestion(config=data_ingestion_config)
@@ -232,7 +232,7 @@ class ChurnController:
                 model_name=model_name
             )
             
-            message = "Prediction task started in background. Results will be saved to experiment 'Churn_model_prediction_cycle' in https://dagshub.com/Teungtran/churn_mlops.mlflow, check your webhook for status "
+            message = "Prediction task started in background. Results will be saved to experiment 'Churn-model-prediction-cycle' in https://dagshub.com/junxng/churn-mlops-project.mlflow, check your webhook for status "
             
             return {
                 "message": message
