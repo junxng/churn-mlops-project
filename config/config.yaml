@@ -20,7 +20,7 @@ data_ingestion:
   local_data_file: artifacts/data_ingestion/input_raw.csv
   test_size: 0.2
   random_state: 42
-  bucket_name: churndataversion
+  bucket_name: churn-mlops-dungnq49
 
 prepare_base_model:
   model_version_dir: artifacts/model_version
@@ -43,12 +43,12 @@ evaluation:
 
 cloud_storage_push:
   root_dir: artifacts
-  bucket_name: churndataversion
+  bucket_name: churn-mlops-dungnq49
   data_version_dir: artifacts/data_version  
   evaluation_dir: artifacts/evaluation 
 
 mlflow_config:
-  dagshub_username: Teungtran
-  dagshub_repo_name: churn_mlops
-  tracking_uri: https://dagshub.com/Teungtran/churn_mlops.mlflow
-  experiment_name: Churn_model_training_cycle
+  dagshub_username: junxng
+  dagshub_repo_name: churn-mlops-project
+  tracking_uri: https://dagshub.com/junxng/churn-mlops-project.mlflow
+  experiment_name: Churn-model-training-cycle
