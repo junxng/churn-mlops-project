@@ -4,6 +4,7 @@ const API_BASE = '';
 // DOM Elements
 const statusInfo = document.getElementById('status-info');
 const refreshStatusBtn = document.getElementById('refresh-status');
+const refreshPageBtn = document.getElementById('refresh-page');
 const predictionForm = document.getElementById('prediction-form');
 const predictionFile = document.getElementById('prediction-file');
 const predictionUpload = document.getElementById('prediction-upload');
@@ -290,6 +291,11 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Status refresh
     refreshStatusBtn.addEventListener('click', checkStatus);
+
+    // Page refresh
+    refreshPageBtn.addEventListener('click', () => {
+        location.reload();
+    });
     
     // Prediction form
     predictionForm.addEventListener('submit', async (e) => {
