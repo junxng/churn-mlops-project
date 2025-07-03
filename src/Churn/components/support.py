@@ -94,14 +94,28 @@ def convert_dates(df):
     return df
 
 def get_dummies(df):
-    categorical_cols = df.select_dtypes(include=['object']).columns
-    if len(categorical_cols) > 0:
-        for col in categorical_cols:
-            if df[col].isin(['yes', 'no', 'True', 'False']).any():
-                df[col] = df[col].map({'yes': 1, 'True': 1, 'no': 0, 'False': 0})
-            else:
-                df = pd.get_dummies(df, columns=[col])
-    return df
+    """
+    One-hot encode all object-type columns in a DataFrame, leaving other columns unchanged.
+    """
+    # Separate the target variable 'Churn' before encoding
+    if 'Churn' in df.columns:
+        churn_series = df['Churn']
+        df_features = df.drop(columns=['Churn'])
+    else:
+        churn_series = None
+        df_features = df
+
+    # Identify categorical columns for one-hot encoding
+    categorical_cols = df_features.select_dtypes(include=['object']).columns
+    
+    # Apply one-hot encoding
+    df_encoded = pd.get_dummies(df_features, columns=categorical_cols, drop_first=True)
+    
+    # Re-attach the 'Churn' column if it was present
+    if churn_series is not None:
+        df_encoded['Churn'] = churn_series
+        
+    return df_encoded
 
 
 

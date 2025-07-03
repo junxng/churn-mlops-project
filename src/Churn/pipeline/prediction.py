@@ -138,13 +138,17 @@ class PredictionPipeline:
                 plot_path = visualize_customer_churn(df_features)
                 mlflow.log_artifact(plot_path, "visualization")
                 os.remove(plot_path)
-                mlflow.log_metric("processing_time_seconds", processing_time)
-                mlflow.log_metric("count_churn", count_churn)
-                mlflow.log_metric("count_not_churn", count_not_churn)
-                mlflow.log_param("start_time", start_datetime.strftime('%Y-%m-%d %H:%M:%S'))
-                mlflow.log_param("end_time", end_datetime.strftime('%Y-%m-%d %H:%M:%S'))
-                mlflow.log_param("rawdata_records", len(df))
-                mlflow.log_metric("records_processed", len(df_encoded))
+                mlflow.log_metrics({
+                    "processing_time_seconds": processing_time,
+                    "count_churn": count_churn,
+                    "count_not_churn": count_not_churn,
+                    "records_processed": len(df_encoded),
+                })
+                mlflow.log_params({
+                    "start_time": start_datetime.strftime('%Y-%m-%d %H:%M:%S'),
+                    "end_time": end_datetime.strftime('%Y-%m-%d %H:%M:%S'),
+                    "rawdata_records": len(df),
+                })
                 
                 message = ""
                 CONFIDENCE_THRESHOLD = 0.7

@@ -7,7 +7,8 @@ from pathlib import Path
 from datetime import datetime
 from .support import most_common,get_dummies
 from sklearn.model_selection import train_test_split
-from imblearn.combine import SMOTEENN
+from imblearn.over_sampling import SMOTE
+from imblearn.under_sampling import EditedNearestNeighbours
 class DataIngestion:
     def __init__(self, config: DataIngestionConfig):
         self.config = config
@@ -131,13 +132,15 @@ class DataIngestion:
         imbalance_threshold = 0.4
 
         if class_distribution.min() < imbalance_threshold:
-            logger.info("Target variable is imbalanced. Applying SMOTEENN...")
-            smote = SMOTEENN(random_state=42)
+            logger.info("Target variable is imbalanced. Applying SMOTE and EditedNearestNeighbours...")
+            smote = SMOTE(random_state=42)
+            enn = EditedNearestNeighbours()
             X_res, y_res = smote.fit_resample(X, y)
+            X_res, y_res = enn.fit_resample(X_res, y_res)
             logger.info(f"Resampled feature matrix shape: {X_res.shape}")
             logger.info(f"Resampled target distribution: \n{y_res.value_counts()}")
         else:
-            logger.info("Target variable is balanced. Skipping SMOTEENN.")
+            logger.info("Target variable is balanced. Skipping resampling.")
             X_res, y_res = X, y
         return X_res, y_res,df_processed
 
