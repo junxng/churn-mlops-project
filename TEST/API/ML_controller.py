@@ -6,7 +6,6 @@ from typing import Optional
 from fastapi import UploadFile, HTTPException
 from .pretrained_model import churn_prediction
 
-
 def df_to_records(df):
     return json.loads(df.to_json(orient='records', date_format='iso'))
 
@@ -30,17 +29,22 @@ async def import_data(uploaded_file):
                     delimiter = delim
                     break
             try:
-                df = pd.read_csv(BytesIO(content), encoding=encoding, delimiter=delimiter, 
-                                 low_memory=False, on_bad_lines='skip')
+                df = pd.read_csv(BytesIO(content), encoding=encoding, delimiter=delimiter, low_memory=False, on_bad_lines='skip')
             except Exception as e:
                 raise ValueError(f"Error reading CSV: {str(e)}")
         elif filename.endswith(('.xlsx', '.xls')):
             if filename.endswith('.xlsx'):
-                import openpyxl
-                engine = 'openpyxl'
+                try:
+                    import openpyxl
+                    engine = 'openpyxl'
+                except ImportError:
+                    raise ValueError("openpyxl is required to read Excel files. Please install it.")
             else:
-                import xlrd
-                engine = 'xlrd'
+                try:
+                    import xlrd
+                    engine = 'xlrd'
+                except ImportError:
+                    raise ValueError("xlrd is required to read Excel files. Please install it.")
             try:
                 df = pd.read_excel(BytesIO(content), engine=engine)
             except Exception as e:
@@ -74,8 +78,8 @@ def get_dummies(df):
     categorical_cols = df.select_dtypes(include=['object']).columns
     if len(categorical_cols) > 0:
         for col in categorical_cols:
-            if df[col].isin(['yes', 'no', 'True', 'False']).any():
-                df[col] = df[col].map({'yes': 1, 'True': 1, 'no': 0, 'False': 0})
+            if bool(df[col].isin(['yes', 'no', 'True', 'False']).any()):
+                df[col] = df[col].replace({'yes': 1, 'True': 1, 'no': 0, 'False': 0})
             else:
                 df = pd.get_dummies(df, columns=[col])
     return df

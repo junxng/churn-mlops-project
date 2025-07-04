@@ -11,6 +11,7 @@ from fastapi import UploadFile
 import mlflow
 import dagshub
 from datetime import datetime
+from typing import Optional
 
 class WorkflowRunner:
     def __init__(self):
@@ -33,18 +34,25 @@ class WorkflowRunner:
             logger.error(f"Error checking data file: {e}")
             return False
             
-    async def run(self, uploaded_file: UploadFile = None):
+    async def run(self, uploaded_file: Optional[UploadFile] = None):
         """Run the complete workflow with proper path passing between stages."""
         self.uploaded_file = uploaded_file
         
         try:
             mlflow_config = self.config_manager.get_mlflow_config()
             logger.info(f"MLflow configured with experiment: {mlflow_config.experiment_name}")
-            dagshub.init(
-                repo_owner=mlflow_config.dagshub_username,
-                repo_name=mlflow_config.dagshub_repo_name,
-                mlflow=True
-            )
+            dagshub_init = getattr(dagshub, 'init', None)
+            if dagshub_init:
+                try:
+                    dagshub_init(
+                        repo_owner=mlflow_config.dagshub_username,
+                        repo_name=mlflow_config.dagshub_repo_name,
+                        mlflow=True
+                    )
+                except Exception:
+                    logger.warning("dagshub.init failed, continuing without DagsHub integration")
+            else:
+                logger.warning("dagshub.init not available, continuing without DagsHub integration")
             mlflow.set_tracking_uri(mlflow_config.tracking_uri)
             mlflow.set_experiment(mlflow_config.experiment_name)
         except Exception as e:

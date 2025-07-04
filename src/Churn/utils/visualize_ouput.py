@@ -2,26 +2,42 @@ import os
 import time
 import matplotlib.pyplot as plt
 import pandas as pd
+from src.Churn.config.configuration import ConfigurationManager
 
-def visualize_customer_churn(df: pd.DataFrame, output_dir: str = "plots"):
+def visualize_customer_churn(df: pd.DataFrame) -> str:
+    """
+    Generates a pie chart visualizing the customer churn distribution.
+
+    Args:
+        df (pd.DataFrame): DataFrame with a 'Churn_RATE' column.
+
+    Returns:
+        str: The path to the saved pie chart image.
+    """
+    config_manager = ConfigurationManager()
+    viz_config = config_manager.get_visualization_config()
+    
+    output_dir = viz_config.output_dir
+    pie_config = viz_config.pie_chart
+
     os.makedirs(output_dir, exist_ok=True)
-    plt.switch_backend('Agg')  # Non-GUI backend for server use
+    plt.switch_backend('Agg')
 
     try:
         churn_counts = df['Churn_RATE'].value_counts().sort_index()
-        labels = ['Not Churned', 'Churned']
         sizes = [churn_counts.get(0, 0), churn_counts.get(1, 0)]
-        colors = ['#2ecc71', '#e74c3c']  
-        fig_pie = plt.figure(figsize=(8, 6))
-        plt.pie(
+        
+        fig_pie, ax = plt.subplots(figsize=(8, 6))
+        ax.pie(
             sizes,
-            labels=labels,
+            labels=pie_config.labels,
             autopct='%1.1f%%',
-            startangle=90,
-            colors=colors,
-            wedgeprops={'edgecolor': 'black'}
+            startangle=pie_config.start_angle,
+            colors=pie_config.colors,
+            wedgeprops={'edgecolor': pie_config.edge_color}
         )
-        plt.title('Customer Churn Distribution')
+        ax.set_title(pie_config.title)
+        ax.axis('equal')
 
         timestamp = int(time.time())
         pie_plot_path = os.path.join(output_dir, f"Churn_RATE_piechart_{timestamp}.png")
@@ -32,4 +48,5 @@ def visualize_customer_churn(df: pd.DataFrame, output_dir: str = "plots"):
 
     except Exception as e:
         print(f"Error generating visualization: {e}")
+        # Return a path to a placeholder or error image if needed
         return os.path.join(output_dir, "visualization_failed.png")

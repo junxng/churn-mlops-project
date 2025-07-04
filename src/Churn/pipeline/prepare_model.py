@@ -29,4 +29,3 @@ class ModelPreparationPipeline:
         
         logger.info(f">>> Stage {STAGE_NAME} completed <<<")
         return model, base_model_path, scaler_path, X_train_scaled, X_test_scaled
-

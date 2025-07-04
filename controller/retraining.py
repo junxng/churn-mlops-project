@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from typing import  Optional
 from src.Churn.pipeline.main_pipeline import WorkflowRunner
 from src.Churn.utils.logging import logger
+from pathlib import Path
 
 router = APIRouter(
     prefix="/workflow",
@@ -33,7 +34,7 @@ async def train_model(
         return WorkflowResponse(
             status="success",
             message="Model training workflow completed successfully",
-            final_model_path=final_model_path,
+            final_model_path=str(final_model_path) if isinstance(final_model_path, Path) else final_model_path,
         )
     
     except HTTPException:

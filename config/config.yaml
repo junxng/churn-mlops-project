@@ -1,54 +1,111 @@
 # Churn MLOps Configuration
-# 
-# Cloud storage functionality is REQUIRED:
-# 1. Create an AWS S3 bucket in your AWS account
-# 2. Set up AWS credentials in your environment (.env file)
-#    - AWS_ACCESS_KEY_ID
-#    - AWS_SECRET_ACCESS_KEY
-#    - AWS_REGION
-# 3. Update the bucket_name below with your actual bucket name
-# 4. Ensure the user has 's3:PutObject' permission on the bucket
-# 
-# Cloud storage will upload ONLY data_version and evaluation artifacts.
-# Model files and training artifacts remain local for security and storage efficiency.
-# If cloud storage push fails, the entire workflow will fail.
 
+# ==============================================================================
+# General Settings
+# ==============================================================================
 artifacts_root: artifacts
+random_state: 42
+
+# ==============================================================================
+# Data Ingestion and Processing
+# ==============================================================================
 data_ingestion:
   root_dir: artifacts/data_ingestion
   data_version_dir: artifacts/data_version
   local_data_file: artifacts/data_ingestion/input_raw.csv
   test_size: 0.2
-  random_state: 42
-  bucket_name: churn-mlops-dungnq49
+  # Columns to drop during initial processing
+  columns_to_drop:
+    - "Returns"
+    - "Age"
+    - "Total Purchase Amount"
+  # Settings for handling imbalanced data
+  imbalance_handling:
+    apply: True
+    imbalance_threshold: 0.4
+    smote_random_state: 42
 
+# ==============================================================================
+# Model Preparation and Training
+# ==============================================================================
 prepare_base_model:
   model_version_dir: artifacts/model_version
   data_version_dir: artifacts/data_version
+  # Base model hyperparameters
   criterion: entropy
-  max_depth: 30 
+  max_depth: 30
   max_features: log2
   min_samples_leaf: 2
   n_estimators: 500
-  random_state: 42
 
 training:
   model_version_dir: artifacts/model_version
   data_version_dir: artifacts/data_version
+  # Accuracy threshold to trigger fine-tuning
+  accuracy_threshold: 0.85
+  # Fine-tuning hyperparameters for RandomizedSearchCV
+  fine_tuning_params:
+    n_iter: 20
+    cv: 5
+    verbose: 1
+    n_jobs: -1
+    # Parameter grid for RandomForestClassifier
+    param_grid:
+      n_estimators: [100, 200, 300, 400, 500, 700, 1000]
+      criterion: ['gini', 'entropy', 'log_loss']
+      max_depth: [null, 10, 20, 30, 50, 70]
+      min_samples_split: [2, 5, 10, 15]
+      min_samples_leaf: [1, 2, 4, 6]
+      max_features: ['sqrt', 'log2', null]
+      bootstrap: [true, false]
+      class_weight: [null, 'balanced', 'balanced_subsample']
 
+# ==============================================================================
+# Evaluation and Prediction
+# ==============================================================================
 evaluation:
   model_version_dir: artifacts/model_version
   data_version_dir: artifacts/data_version
   evaluation_dir: artifacts/evaluation
 
+prediction:
+  # Confidence threshold for sending retraining notifications
+  retraining_confidence_threshold: 0.7
+  # Default model and scaler versions for prediction API
+  default_model_version: "1"
+  default_scaler_version: "scaler_churn_version_20250701T105905.pkl"
+  default_run_id: "b523ba441ea0465085716dcebb916294"
+  default_model_name: "RandomForestClassifier"
+
+# ==============================================================================
+# Cloud Storage (AWS S3)
+# ==============================================================================
 cloud_storage_push:
   root_dir: artifacts
   bucket_name: churn-mlops-dungnq49
-  data_version_dir: artifacts/data_version  
-  evaluation_dir: artifacts/evaluation 
+  data_version_dir: artifacts/data_version
+  evaluation_dir: artifacts/evaluation
+  # Prefix for S3 object keys
+  s3_object_prefix: "churn_data_store"
 
+# ==============================================================================
+# MLflow and DagsHub
+# ==============================================================================
 mlflow_config:
   dagshub_username: junxng
   dagshub_repo_name: churn-mlops-project
   tracking_uri: https://dagshub.com/junxng/churn-mlops-project.mlflow
-  experiment_name: Churn-model-training-cycle
+  experiment_name: "Churn-model-training-cycle"
+  prediction_experiment_name: "Churn-model-prediction-cycle"
+
+# ==============================================================================
+# Visualization
+# ==============================================================================
+visualization:
+  output_dir: "plots"
+  pie_chart:
+    labels: ['Not Churned', 'Churned']
+    colors: ['#2ecc71', '#e74c3c']
+    start_angle: 90
+    edge_color: 'black'
+    title: 'Customer Churn Distribution'

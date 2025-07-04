@@ -1,57 +1,89 @@
-# Churn MLOps Project
+# Churn Prediction MLOps Project
 
-This project implements an end-to-end MLOps pipeline for customer churn prediction.
+This project provides an end-to-end MLOps solution for customer churn prediction. It includes a machine learning pipeline for data processing, model training, and evaluation, as well as a FastAPI for serving predictions. The project is designed for reproducibility and scalability, incorporating tools like DVC and Kubeflow.
 
-## Setup Instructions
+## Features
 
-### 1. Environment Setup
-```bash
-# Create a virtual environment
-python -m venv venv
-
-# Activate the environment
-# On Windows
-venv\Scripts\activate
-# On Linux/Mac
-source venv/bin/activate
-
-# Install dependencies
-pip install -r requirements.txt
-```
-
-### 2. AWS S3 Configuration
-The project uses AWS S3 for storing data versions and evaluation artifacts. To set up:
-
-1. Create an AWS S3 bucket
-2. Create a `.env` file in the project root with the following variables:
-```
-AWS_ACCESS_KEY_ID=your_aws_access_key_id
-AWS_SECRET_ACCESS_KEY=your_aws_secret_access_key
-AWS_REGION=your_aws_region
-```
-3. Update the `bucket_name` in `config/config.yaml` to match your S3 bucket name
-
-### 3. Running the Pipeline
-```bash
-python main.py
-```
-
-## Pipeline Stages
-1. Data Preparation - Ingests and preprocesses data
-2. Model Preparation - Creates and scales the base model
-3. Train and Evaluate - Trains, evaluates, and fine-tunes the model if needed
-4. Cloud Storage Push - Uploads data versions and evaluation artifacts to S3
-5. Cleanup - Removes temporary versioned files
+- **Data Processing**: Handles raw customer data, performs feature engineering, and prepares it for model training.
+- **Model Training**: Trains a Random Forest Classifier and includes hyperparameter tuning to optimize performance.
+- **Model Evaluation**: Evaluates the model using various metrics such as accuracy, precision, recall, F1-score, and ROC AUC.
+- **API Server**: A FastAPI application to serve churn predictions and trigger model retraining.
+- **Reproducibility**: Uses DVC to version control data, models, and pipelines.
+- **Orchestration**: Integrates with Kubeflow for pipeline orchestration.
+- **Cloud Integration**: Pushes artifacts to cloud storage (AWS S3).
 
 ## Project Structure
-- `artifacts/` - Stores generated artifacts
-- `config/` - Configuration files
-- `data/` - Input data directory
-- `src/` - Source code
-  - `Churn/` - Main package
-    - `components/` - Core components (data ingestion, model training, etc.)
-    - `config/` - Configuration management
-    - `entity/` - Data entities and classes
-    - `pipeline/` - Pipeline orchestration
-    - `utils/` - Utility functions
-- `TEST/` - Test scripts and notebooks
+
+```
+├── artifacts/            # Stores data, models, and evaluation results
+├── config/               # Configuration files
+├── controller/           # FastAPI route handlers
+├── src/                  # Source code for the ML pipeline
+│   └── Churn/
+│       ├── components/   # Individual pipeline components
+│       ├── config/       # Configuration management
+│       ├── entity/       # Data entities
+│       ├── pipeline/     # ML pipelines
+│       └── utils/        # Utility functions
+├── main.py               # FastAPI application entry point
+├── run_pipeline.py       # Script to run the DVC pipeline
+├── dvc.yaml              # DVC pipeline definition
+├── pyproject.toml        # Project dependencies
+└── Dockerfile            # Dockerfile for containerization
+```
+
+## Getting Started
+
+### Prerequisites
+
+- Python 3.11+
+- Docker
+- DVC
+- An AWS account with an S3 bucket for cloud storage
+
+### Installation
+
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/your-username/churn-mlops-project.git
+    cd churn-mlops-project
+    ```
+
+2.  **Install dependencies:**
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+3.  **Configure cloud storage:**
+    - Create an AWS S3 bucket.
+    - Set up your AWS credentials in your environment.
+    - Update `config/config.yaml` with your bucket name.
+
+### Running the Pipeline
+
+To run the entire machine learning pipeline, use the following command:
+
+```bash
+dvc repro
+```
+
+This will execute the stages defined in `dvc.yaml`, including data processing, model training, and evaluation.
+
+### Running the API Server
+
+To start the FastAPI server, run:
+
+```bash
+uv run main.py
+```
+
+The API will be available at `http://localhost:8888/docs`.
+
+### API Endpoints
+
+-   `POST /predict`: Get a churn prediction for a single customer.
+-   `POST /retrain`: Trigger the model retraining pipeline.
+
+## Contributing
+
+Contributions are welcome! Please open an issue or submit a pull request for any changes.

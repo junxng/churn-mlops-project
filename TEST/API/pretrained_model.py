@@ -5,7 +5,7 @@ load_dotenv()
 import joblib as jb
 import pandas as pd
 import matplotlib.pyplot as plt
-from BACKEND.ML_Model.Customer_segmentation import most_common
+from src.Churn.components.support import most_common
 from .ML_controller import get_dummies
 
 # Load local Random Forest model instead of MLflow CNN model

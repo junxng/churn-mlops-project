@@ -12,13 +12,16 @@ class TrainEvaluationPipeline:
         self.mlflow_config = mlflow_config
     def main(self, base_model, X_train_scaled, X_test_scaled, y_train, y_test):
         logger.info(f">>> Stage {STAGE_NAME} started <<<")
-        training_config = ConfigurationManager().get_training_config()
-        evaluation_config = ConfigurationManager().get_evaluation_config()
+        config_manager = ConfigurationManager()
+        training_config = config_manager.get_training_config()
+        evaluation_config = config_manager.get_evaluation_config()
+        visualization_config = config_manager.get_visualization_config()
         
         # No need to start a new MLflow run here as we'll use the one from main_pipeline
         model_processor = TrainAndEvaluateModel(
             config_train=training_config,
-            config_eval=evaluation_config
+            config_eval=evaluation_config,
+            config_viz=visualization_config
         )
         
         model, metrics, final_model_path = model_processor.train_and_evaluate(
